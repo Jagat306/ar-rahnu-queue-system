@@ -74,31 +74,12 @@ function parseBody(req) {
   });
 }
 
-function sendWhatsApp(phone, message) {
-  if (!phone) return null;
-
-  const cleanPhone = phone.replace(/[^\d]/g, "");
-  if (!cleanPhone) return null;
-
-  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-  console.log(`WhatsApp: ${message} (${whatsappUrl})`);
-  return whatsappUrl;
-}
-
-function buildWhatsAppMessage(queue) {
-  return [
-    "Assalamualaikum,",
-    "",
-    `Giliran anda: ${queue.number}`,
-    `Servis: ${queue.service}`,
-    `Sila hadir ke Kaunter ${queue.counter} sekarang.`,
-    "",
-    "Sahabat Ar Rahnu Kuantan",
-  ].join("\n");
-}
-
 function sortByCreatedAt(a, b) {
   return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+}
+
+function isWaiting(status) {
+  return status === "waiting" || status === "Menunggu" || status === "Waiting";
 }
 
 function normalizeCounter(counter) {
@@ -107,7 +88,7 @@ function normalizeCounter(counter) {
 }
 
 async function createQueue(req, res) {
-  const { service, phone } = await parseBody(req);
+  const { service } = await parseBody(req);
   const config = services[service];
 
   if (!config) {
@@ -122,9 +103,8 @@ async function createQueue(req, res) {
     service: config.label,
     serviceKey: service,
     number: formatNumber(config.code, db.counters[config.code]),
-    status: "Menunggu",
+    status: "waiting",
     counter: null,
-    phone: phone || "",
     createdAt: new Date().toISOString(),
   };
 
@@ -139,12 +119,11 @@ function listQueue(res) {
 }
 
 function callQueue(db, queue, counter) {
-  queue.status = "Serving";
+  queue.status = "serving";
   queue.counter = counter;
   queue.calledAt = new Date().toISOString();
 
-  const message = buildWhatsAppMessage(queue);
-  queue.notification = sendWhatsApp(queue.phone, message);
+  const message = `Giliran anda ${queue.number} sila ke Kaunter ${queue.counter}`;
 
   writeDb(db);
   return { queue, message };
@@ -165,8 +144,7 @@ async function callNext(req, res, service) {
   const db = readDb();
   const waiting = db.queues
     .filter((item) => {
-      const isWaiting = item.status === "Menunggu" || item.status === "Waiting";
-      return service ? isWaiting && item.serviceKey === service : isWaiting;
+      return service ? isWaiting(item.status) && item.serviceKey === service : isWaiting(item.status);
     })
     .sort(sortByCreatedAt);
   const next = waiting[0];
@@ -193,7 +171,7 @@ async function callById(req, res, id) {
     return sendJson(res, 404, { error: "Queue tidak dijumpai" });
   }
 
-  if (queue.status !== "Menunggu" && queue.status !== "Waiting") {
+  if (!isWaiting(queue.status)) {
     return sendJson(res, 400, { error: "Queue ini sudah dipanggil" });
   }
 

@@ -121,8 +121,7 @@
       margin-top: 14px;
     }
 
-    button,
-    a.whatsapp {
+    button {
       min-height: 48px;
       border: 0;
       border-radius: 6px;
@@ -138,8 +137,7 @@
       text-align: center;
     }
 
-    button:hover,
-    a.whatsapp:hover {
+    button:hover {
       background: #a27618;
     }
 
@@ -155,12 +153,6 @@
 
     button.danger:hover {
       background: #812323;
-    }
-
-    a.whatsapp {
-      display: none;
-      margin-top: 10px;
-      background: #1f8f4d;
     }
 
     .queue-list {
@@ -272,7 +264,6 @@
           <button id="callNext">CALL NEXT</button>
           <button id="changeCounter" class="secondary">Tukar Kaunter</button>
         </div>
-        <a id="whatsappLink" class="whatsapp" target="_blank" rel="noopener">Hantar WhatsApp</a>
       </section>
 
       <section class="panel">
@@ -293,7 +284,6 @@
             <th>Service</th>
             <th>Status</th>
             <th>Counter</th>
-            <th>Phone</th>
           </tr>
         </thead>
         <tbody id="queueBody"></tbody>
@@ -311,7 +301,6 @@
     const callNextButton = document.getElementById("callNext");
     const changeCounterButton = document.getElementById("changeCounter");
     const resetButton = document.getElementById("resetQueue");
-    const whatsappLink = document.getElementById("whatsappLink");
 
     let selectedCounter = localStorage.getItem("selectedCounter");
     let activeQueueId = null;
@@ -333,7 +322,8 @@
     }
 
     function statusLabel(status) {
-      if (status === "Serving") return "Serving";
+      if (status === "serving" || status === "Serving") return "Dipanggil";
+      if (status === "done" || status === "Selesai") return "Selesai";
       return "Waiting";
     }
 
@@ -341,20 +331,13 @@
       activeQueueId = queue.id;
       currentNumber.textContent = queue.number;
       currentService.textContent = `${queue.service} - Kaunter ${queue.counter}`;
-      currentStatus.textContent = "Serving";
-
-      if (queue.notification) {
-        whatsappLink.href = queue.notification;
-        whatsappLink.style.display = "grid";
-      } else {
-        whatsappLink.style.display = "none";
-      }
+      currentStatus.textContent = "Dipanggil";
     }
 
     async function loadQueue() {
       const response = await fetch("/api/queue");
       const rows = await response.json();
-      const waiting = rows.filter((item) => item.status === "Menunggu" || item.status === "Waiting");
+      const waiting = rows.filter((item) => item.status === "waiting" || item.status === "Menunggu" || item.status === "Waiting");
 
       waitingList.innerHTML = waiting.length
         ? waiting.map((item) => `
@@ -374,7 +357,6 @@
             <td>${item.service}</td>
             <td>${statusLabel(item.status)}</td>
             <td>${item.counter ? "Kaunter " + item.counter : "-"}</td>
-            <td>${item.phone || "-"}</td>
           </tr>
         `)
         .join("");
@@ -429,7 +411,7 @@
     changeCounterButton.addEventListener("click", askCounter);
 
     resetButton.addEventListener("click", async () => {
-      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001?")) return;
+      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001, K001?")) return;
 
       try {
         await postJson("/api/reset");
@@ -437,7 +419,6 @@
         currentNumber.textContent = "-";
         currentService.textContent = "Belum ada panggilan";
         currentStatus.textContent = "Waiting";
-        whatsappLink.style.display = "none";
         await loadQueue();
       } catch (error) {
         alert(error.message);
