@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Panel - Ar Rahnu</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #fff9eb;
+      color: #2f2615;
+      padding: 24px;
+    }
+
+    .wrap {
+      width: min(100%, 980px);
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      color: #9b7115;
+    }
+
+    h1 {
+      font-size: 30px;
+    }
+
+    h2 {
+      font-size: 20px;
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: #6e6145;
+      line-height: 1.45;
+    }
+
+    .counter-badge {
+      min-width: 150px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      background: #b98b22;
+      color: #ffffff;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: #ffffff;
+      border: 1px solid #f1dca3;
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 14px 35px rgba(109, 82, 21, 0.1);
+    }
+
+    .current {
+      margin-top: 14px;
+      min-height: 170px;
+      padding: 22px;
+      border-radius: 8px;
+      background: #fff4d2;
+      border: 1px solid #edce72;
+      display: grid;
+      align-content: center;
+      text-align: center;
+    }
+
+    .current .number {
+      display: block;
+      font-size: 56px;
+      font-weight: 900;
+      color: #8a6313;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .current .service {
+      font-size: 20px;
+      font-weight: 700;
+      color: #3b2d10;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #1f8f4d;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button,
+    a.whatsapp {
+      min-height: 48px;
+      border: 0;
+      border-radius: 6px;
+      background: #b98b22;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: grid;
+      place-items: center;
+      padding: 0 14px;
+      text-align: center;
+    }
+
+    button:hover,
+    a.whatsapp:hover {
+      background: #a27618;
+    }
+
+    button.secondary {
+      background: #ffffff;
+      color: #8a6313;
+      border: 1px solid #d8b85a;
+    }
+
+    button.danger {
+      background: #9d2f2f;
+    }
+
+    button.danger:hover {
+      background: #812323;
+    }
+
+    a.whatsapp {
+      display: none;
+      margin-top: 10px;
+      background: #1f8f4d;
+    }
+
+    .queue-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .queue-item {
+      width: 100%;
+      min-height: 62px;
+      background: #ffffff;
+      color: #2f2615;
+      border: 1px solid #ead49b;
+      justify-content: start;
+      text-align: left;
+      padding: 12px 14px;
+    }
+
+    .queue-item:hover {
+      background: #fff4d2;
+    }
+
+    .queue-item strong {
+      display: block;
+      font-size: 22px;
+      color: #8a6313;
+      margin-bottom: 2px;
+    }
+
+    .empty {
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: 8px;
+      background: #fff9eb;
+      border: 1px dashed #d8b85a;
+      color: #6e6145;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #f4e6bd;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: #7c5b13;
+    }
+
+    tr.active-row {
+      background: #fff4d2;
+      font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 16px;
+      }
+
+      header,
+      .grid,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        display: grid;
+      }
+
+      .counter-badge {
+        width: 100%;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Staff Panel</h1>
+        <p>Pilih queue secara manual atau panggil pelanggan paling awal.</p>
+      </div>
+      <div id="counterBadge" class="counter-badge">Kaunter -</div>
+    </header>
+
+    <main class="grid">
+      <section class="panel">
+        <h2>Sedang Dipanggil</h2>
+        <div class="current">
+          <span id="currentNumber" class="number">-</span>
+          <span id="currentService" class="service">Belum ada panggilan</span>
+          <span id="currentStatus" class="status">Waiting</span>
+        </div>
+        <div class="actions">
+          <button id="callNext">CALL NEXT</button>
+          <button id="changeCounter" class="secondary">Tukar Kaunter</button>
+        </div>
+        <a id="whatsappLink" class="whatsapp" target="_blank" rel="noopener">Hantar WhatsApp</a>
+      </section>
+
+      <section class="panel">
+        <h2>Queue Menunggu</h2>
+        <div id="waitingList" class="queue-list"></div>
+      </section>
+    </main>
+
+    <section class="panel" style="margin-top: 16px;">
+      <div class="actions">
+        <h2>Semua Queue</h2>
+        <button id="resetQueue" class="danger">RESET</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Counter</th>
+            <th>Phone</th>
+          </tr>
+        </thead>
+        <tbody id="queueBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const counterBadge = document.getElementById("counterBadge");
+    const currentNumber = document.getElementById("currentNumber");
+    const currentService = document.getElementById("currentService");
+    const currentStatus = document.getElementById("currentStatus");
+    const waitingList = document.getElementById("waitingList");
+    const queueBody = document.getElementById("queueBody");
+    const callNextButton = document.getElementById("callNext");
+    const changeCounterButton = document.getElementById("changeCounter");
+    const resetButton = document.getElementById("resetQueue");
+    const whatsappLink = document.getElementById("whatsappLink");
+
+    let selectedCounter = localStorage.getItem("selectedCounter");
+    let activeQueueId = null;
+
+    function askCounter() {
+      let value = "";
+
+      while (!["1", "2", "3"].includes(value)) {
+        value = prompt("Pilih kaunter anda (1, 2, atau 3)", selectedCounter || "1");
+        if (value === null && selectedCounter) break;
+      }
+
+      if (["1", "2", "3"].includes(value)) {
+        selectedCounter = value;
+        localStorage.setItem("selectedCounter", selectedCounter);
+      }
+
+      counterBadge.textContent = `Kaunter ${selectedCounter || "-"}`;
+    }
+
+    function statusLabel(status) {
+      if (status === "Serving") return "Serving";
+      return "Waiting";
+    }
+
+    function setCurrent(queue, message) {
+      activeQueueId = queue.id;
+      currentNumber.textContent = queue.number;
+      currentService.textContent = `${queue.service} - Kaunter ${queue.counter}`;
+      currentStatus.textContent = "Serving";
+
+      if (queue.notification) {
+        whatsappLink.href = queue.notification;
+        whatsappLink.style.display = "grid";
+      } else {
+        whatsappLink.style.display = "none";
+      }
+    }
+
+    async function loadQueue() {
+      const response = await fetch("/api/queue");
+      const rows = await response.json();
+      const waiting = rows.filter((item) => item.status === "Menunggu" || item.status === "Waiting");
+
+      waitingList.innerHTML = waiting.length
+        ? waiting.map((item) => `
+          <button class="queue-item" data-id="${item.id}">
+            <strong>${item.number}</strong>
+            <span>${item.service}</span>
+          </button>
+        `).join("")
+        : '<div class="empty">Tiada queue menunggu</div>';
+
+      queueBody.innerHTML = rows
+        .slice()
+        .reverse()
+        .map((item) => `
+          <tr class="${item.id === activeQueueId ? "active-row" : ""}">
+            <td>${item.number}</td>
+            <td>${item.service}</td>
+            <td>${statusLabel(item.status)}</td>
+            <td>${item.counter ? "Kaunter " + item.counter : "-"}</td>
+            <td>${item.phone || "-"}</td>
+          </tr>
+        `)
+        .join("");
+
+      document.querySelectorAll(".queue-item").forEach((button) => {
+        button.addEventListener("click", () => callQueue(button.dataset.id));
+      });
+    }
+
+    async function postJson(url, body = {}) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Server error");
+      return data;
+    }
+
+    async function callQueue(id) {
+      if (!selectedCounter) askCounter();
+      if (!selectedCounter) return;
+
+      try {
+        const data = await postJson(`/api/call/${id}`, { counter: selectedCounter });
+        setCurrent(data.queue, data.message);
+        await loadQueue();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    callNextButton.addEventListener("click", async () => {
+      callNextButton.disabled = true;
+
+      try {
+        if (!selectedCounter) askCounter();
+        if (!selectedCounter) return;
+
+        const data = await postJson("/api/next", { counter: selectedCounter });
+        setCurrent(data.queue, data.message);
+        await loadQueue();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        callNextButton.disabled = false;
+      }
+    });
+
+    changeCounterButton.addEventListener("click", askCounter);
+
+    resetButton.addEventListener("click", async () => {
+      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001?")) return;
+
+      try {
+        await postJson("/api/reset");
+        activeQueueId = null;
+        currentNumber.textContent = "-";
+        currentService.textContent = "Belum ada panggilan";
+        currentStatus.textContent = "Waiting";
+        whatsappLink.style.display = "none";
+        await loadQueue();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    askCounter();
+    loadQueue();
+    setInterval(loadQueue, 3000);
+  </script>
+</body>
+</html>

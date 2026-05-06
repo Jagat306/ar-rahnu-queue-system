@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: sar-queue
+    runtime: node
+    plan: free
+    startCommand: node server.js
+    healthCheckPath: /health
