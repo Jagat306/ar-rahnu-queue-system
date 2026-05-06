@@ -4,7 +4,7 @@ const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "queue.json");
-const DEFAULT_DB = { queues: [], counters: { G: 0, T: 0, O: 0, U: 0, K: 0 } };
+const DEFAULT_DB = { queues: [], counters: { G: 0, T: 0, O: 0, U: 0, K: 0, L: 0 } };
 
 const services = {
   gadai: { code: "G", label: "Gadai" },
@@ -12,6 +12,7 @@ const services = {
   overlap: { code: "O", label: "Overlap" },
   upah: { code: "U", label: "Bayaran Upah" },
   koperasi: { code: "K", label: "Koperasi" },
+  lain: { code: "L", label: "Lain-lain" },
 };
 
 const mimeTypes = {

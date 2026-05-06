@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ar Rahnu Queue</title>
+  <title>Sahabat Ar Rahnu Kuantan Queue</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,31 +13,57 @@
       margin: 0;
       min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #fff9eb;
+      background: #fff8e8;
       color: #2f2615;
-      display: grid;
-      place-items: center;
-      padding: 18px;
+      padding: 16px;
     }
 
     main {
-      width: min(100%, 440px);
-      background: #ffffff;
-      border: 1px solid #f1dca3;
-      border-radius: 8px;
-      box-shadow: 0 18px 45px rgba(109, 82, 21, 0.12);
-      padding: 24px;
+      width: min(100%, 460px);
+      margin: 0 auto;
     }
 
     .brand {
       text-align: center;
-      margin-bottom: 22px;
+      padding: 18px 10px 12px;
     }
 
-    h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
+    .brand-title {
+      margin: 0;
       color: #9b7115;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.12;
+    }
+
+    .brand-subtitle {
+      margin-top: 8px;
+      color: #7b5a16;
+      font-weight: 700;
+    }
+
+    .notice {
+      position: sticky;
+      top: 10px;
+      z-index: 5;
+      margin: 10px 0 14px;
+      padding: 14px;
+      border: 1px solid #f0bc45;
+      border-radius: 8px;
+      background: #fff1c2;
+      color: #5f4203;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+      box-shadow: 0 10px 25px rgba(155, 113, 21, 0.12);
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #f1dca3;
+      border-radius: 8px;
+      box-shadow: 0 18px 45px rgba(109, 82, 21, 0.12);
+      padding: 22px;
     }
 
     p {
@@ -55,12 +81,13 @@
     button {
       min-height: 58px;
       border: 0;
-      border-radius: 6px;
+      border-radius: 8px;
       background: #b98b22;
       color: #ffffff;
       font-size: 18px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
+      box-shadow: 0 8px 16px rgba(185, 139, 34, 0.18);
     }
 
     button:hover {
@@ -69,7 +96,7 @@
 
     .ticket {
       display: none;
-      margin-top: 22px;
+      margin-top: 18px;
       padding: 22px;
       background: #fff4d2;
       border: 1px solid #edce72;
@@ -79,26 +106,39 @@
 
     .ticket strong {
       display: block;
-      font-size: 48px;
+      font-size: 54px;
       color: #8a6313;
       margin: 8px 0;
       line-height: 1;
     }
 
     .service {
-      font-size: 18px;
-      font-weight: 800;
+      font-size: 19px;
+      font-weight: 900;
       color: #3b2d10;
     }
 
-    .status-badge {
-      display: inline-block;
+    .status-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
       margin-top: 14px;
+    }
+
+    .status-badge,
+    .counter-badge {
+      display: inline-block;
       padding: 9px 14px;
       border-radius: 999px;
       background: #6e6145;
       color: #ffffff;
-      font-weight: 800;
+      font-weight: 900;
+    }
+
+    .counter-badge {
+      display: none;
+      background: #1f8f4d;
     }
 
     .status-badge.called {
@@ -109,7 +149,7 @@
     .reminder {
       margin-top: 12px;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
       color: #8a6313;
     }
 
@@ -120,7 +160,7 @@
       display: none;
       place-items: center;
       padding: 18px;
-      background: rgba(47, 38, 21, 0.86);
+      background: rgba(47, 38, 21, 0.88);
     }
 
     .popup.show {
@@ -128,27 +168,36 @@
     }
 
     .popup-card {
-      width: min(100%, 460px);
-      min-height: 72vh;
+      width: min(100%, 480px);
+      min-height: 76vh;
       background: #ffffff;
       border: 4px solid #edce72;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 28px;
       text-align: center;
       display: grid;
       align-content: center;
       animation: popIn 0.35s ease-out;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    .popup-brand {
+      color: #9b7115;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
     }
 
     .popup-card h2 {
-      margin: 0 0 12px;
-      font-size: 26px;
-      color: #9b7115;
+      margin: 0 0 8px;
+      font-size: 28px;
+      color: #2f2615;
     }
 
     .popup-number {
       display: block;
-      font-size: 68px;
+      font-size: 76px;
       line-height: 1;
       font-weight: 900;
       color: #1f8f4d;
@@ -156,10 +205,10 @@
     }
 
     .popup-counter {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 900;
       color: #2f2615;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .popup button {
@@ -190,32 +239,45 @@
 <body>
   <main>
     <section class="brand">
-      <h1>Ar Rahnu</h1>
+      <h1 class="brand-title">SAHABAT AR RAHNU KUANTAN</h1>
+      <p class="brand-subtitle">Sistem Nombor Giliran</p>
+    </section>
+
+    <section class="notice">
+      Sila jangan keluar dari paparan ini untuk menerima panggilan nombor giliran anda.
+    </section>
+
+    <section class="card">
       <p>Pilih urusan untuk mendapatkan nombor giliran.</p>
-    </section>
 
-    <section class="buttons">
-      <button data-service="gadai">Gadai</button>
-      <button data-service="tebus">Tebus</button>
-      <button data-service="overlap">Overlap</button>
-      <button data-service="upah">Bayaran Upah</button>
-      <button data-service="koperasi">Koperasi</button>
-    </section>
+      <section class="buttons">
+        <button data-service="gadai">Gadai</button>
+        <button data-service="tebus">Tebus</button>
+        <button data-service="overlap">Overlap</button>
+        <button data-service="upah">Bayaran Upah</button>
+        <button data-service="koperasi">Koperasi</button>
+        <button data-service="lain">Lain-lain</button>
+      </section>
 
-    <section id="ticket" class="ticket">
-      <p>Nombor anda:</p>
-      <strong id="number">-</strong>
-      <p id="service" class="service">-</p>
-      <span id="status" class="status-badge">Waiting</span>
-      <p class="reminder">Sila screenshot nombor giliran anda</p>
+      <section id="ticket" class="ticket">
+        <p>Nombor anda:</p>
+        <strong id="number">-</strong>
+        <p id="service" class="service">-</p>
+        <div class="status-row">
+          <span id="status" class="status-badge">Menunggu</span>
+          <span id="counter" class="counter-badge">Kaunter -</span>
+        </div>
+        <p class="reminder">Sila screenshot nombor giliran anda</p>
+      </section>
     </section>
   </main>
 
   <div id="popup" class="popup">
     <section class="popup-card">
-      <h2>Giliran Anda</h2>
+      <div class="popup-brand">SAHABAT AR RAHNU KUANTAN</div>
+      <h2>Giliran anda</h2>
       <span id="popupNumber" class="popup-number">-</span>
-      <p id="popupText" class="popup-counter">Sila ke kaunter sekarang</p>
+      <p id="popupText" class="popup-counter">Sila ke Kaunter sekarang</p>
       <button id="closePopup">Saya Faham</button>
     </section>
   </div>
@@ -227,6 +289,7 @@
     const number = document.getElementById("number");
     const serviceText = document.getElementById("service");
     const statusText = document.getElementById("status");
+    const counterText = document.getElementById("counter");
     const popup = document.getElementById("popup");
     const popupNumber = document.getElementById("popupNumber");
     const popupText = document.getElementById("popupText");
@@ -254,10 +317,14 @@
       localStorage.setItem(ticketKey, JSON.stringify(savedTicket));
     }
 
+    function isServing(status) {
+      return status === "serving" || status === "Serving";
+    }
+
     function statusLabel(status) {
-      if (status === "serving" || status === "Serving") return "Dipanggil";
-      if (status === "done" || status === "Selesai") return "Selesai";
-      return "Waiting";
+      if (isServing(status)) return "Dipanggil";
+      if (status === "done" || status === "selesai" || status === "Selesai") return "Selesai";
+      return "Menunggu";
     }
 
     function renderTicket(queue) {
@@ -266,25 +333,41 @@
       number.textContent = queue.number;
       serviceText.textContent = queue.service;
       statusText.textContent = statusLabel(queue.status);
-      statusText.classList.toggle("called", queue.status === "serving" || queue.status === "Serving");
+      statusText.classList.toggle("called", isServing(queue.status));
+
+      if (queue.counter) {
+        counterText.textContent = `Kaunter ${queue.counter}`;
+        counterText.style.display = "inline-block";
+      } else {
+        counterText.style.display = "none";
+      }
+
       ticket.style.display = "block";
+    }
+
+    function playTone(context, delay) {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(1046, context.currentTime + delay);
+      gain.gain.setValueAtTime(0, context.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.18, context.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + delay + 0.45);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(context.currentTime + delay);
+      oscillator.stop(context.currentTime + delay + 0.48);
     }
 
     function playAlertSound() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const context = new AudioContext();
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.frequency.value = 880;
-        gain.gain.value = 0.18;
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.55);
+        playTone(context, 0);
+        playTone(context, 0.55);
+        playTone(context, 1.1);
       } catch (error) {
-        // Some browsers block sound until the user interacts; the popup still appears.
+        // Popup still appears if the browser blocks automatic audio.
       }
     }
 
@@ -294,9 +377,13 @@
       popupShown = true;
       localStorage.setItem("arRahnuPopupShown", "true");
       popupNumber.textContent = queue.number;
-      popupText.textContent = `Sila ke Kaunter ${queue.counter}`;
+      popupText.textContent = `Sila ke Kaunter ${queue.counter} sekarang`;
       popup.classList.add("show");
       playAlertSound();
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate([300, 120, 300, 120, 300]);
+      }
     }
 
     async function monitorTicket() {
@@ -309,10 +396,11 @@
 
         if (!latest) return;
 
+        const wasServing = isServing(savedTicket.status);
         saveTicket(latest);
         renderTicket(latest);
 
-        if ((latest.status === "serving" || latest.status === "Serving") && latest.counter) {
+        if (!wasServing && isServing(latest.status) && latest.counter) {
           showCalledPopup(latest);
         }
       } catch (error) {

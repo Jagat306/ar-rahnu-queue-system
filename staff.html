@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Staff Panel - Ar Rahnu</title>
+  <title>Panel Queue System - Sahabat Ar Rahnu Kuantan</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,35 +13,55 @@
       margin: 0;
       min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #fff9eb;
+      background: #fff8e8;
       color: #2f2615;
-      padding: 24px;
+      padding: 22px;
     }
 
     .wrap {
-      width: min(100%, 980px);
+      width: min(100%, 1060px);
       margin: 0 auto;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
+    .brand {
+      text-align: center;
       margin-bottom: 18px;
+      padding: 18px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #f1dca3;
+      box-shadow: 0 14px 35px rgba(109, 82, 21, 0.1);
     }
 
-    h1,
-    h2 {
+    .brand h1,
+    .brand h2 {
       margin: 0;
       color: #9b7115;
+      font-weight: 900;
+      line-height: 1.12;
     }
 
-    h1 {
+    .brand h1 {
       font-size: 30px;
     }
 
-    h2 {
+    .brand h2 {
+      margin-top: 6px;
+      font-size: 20px;
+      color: #2f2615;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      margin: 0;
+      color: #9b7115;
       font-size: 20px;
     }
 
@@ -52,14 +72,17 @@
     }
 
     .counter-badge {
-      min-width: 150px;
-      padding: 14px 18px;
-      border-radius: 8px;
+      min-width: 210px;
+      padding: 20px 24px;
+      border-radius: 10px;
       background: #b98b22;
       color: #ffffff;
       text-align: center;
-      font-size: 22px;
-      font-weight: 800;
+      font-size: 32px;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 14px 26px rgba(185, 139, 34, 0.22);
     }
 
     .grid {
@@ -71,16 +94,16 @@
     .panel {
       background: #ffffff;
       border: 1px solid #f1dca3;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 18px;
       box-shadow: 0 14px 35px rgba(109, 82, 21, 0.1);
     }
 
     .current {
       margin-top: 14px;
-      min-height: 170px;
-      padding: 22px;
-      border-radius: 8px;
+      min-height: 190px;
+      padding: 24px;
+      border-radius: 10px;
       background: #fff4d2;
       border: 1px solid #edce72;
       display: grid;
@@ -90,7 +113,7 @@
 
     .current .number {
       display: block;
-      font-size: 56px;
+      font-size: 64px;
       font-weight: 900;
       color: #8a6313;
       line-height: 1;
@@ -98,20 +121,20 @@
     }
 
     .current .service {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 900;
       color: #3b2d10;
     }
 
     .status {
       display: inline-block;
-      margin-top: 10px;
-      padding: 7px 12px;
+      margin-top: 12px;
+      padding: 8px 14px;
       border-radius: 999px;
       background: #1f8f4d;
       color: #ffffff;
       font-size: 14px;
-      font-weight: 800;
+      font-weight: 900;
     }
 
     .actions {
@@ -122,19 +145,20 @@
     }
 
     button {
-      min-height: 48px;
+      min-height: 50px;
       border: 0;
-      border-radius: 6px;
+      border-radius: 8px;
       background: #b98b22;
       color: #ffffff;
       font-size: 15px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
       text-decoration: none;
       display: grid;
       place-items: center;
       padding: 0 14px;
       text-align: center;
+      box-shadow: 0 8px 16px rgba(185, 139, 34, 0.16);
     }
 
     button:hover {
@@ -163,13 +187,15 @@
 
     .queue-item {
       width: 100%;
-      min-height: 62px;
+      min-height: 66px;
       background: #ffffff;
       color: #2f2615;
       border: 1px solid #ead49b;
+      border-left: 8px solid #b98b22;
       justify-content: start;
       text-align: left;
       padding: 12px 14px;
+      box-shadow: none;
     }
 
     .queue-item:hover {
@@ -178,10 +204,17 @@
 
     .queue-item strong {
       display: block;
-      font-size: 22px;
+      font-size: 24px;
       color: #8a6313;
       margin-bottom: 2px;
     }
+
+    .service-gadai { border-left-color: #b98b22; }
+    .service-tebus { border-left-color: #1f8f4d; }
+    .service-overlap { border-left-color: #4564b8; }
+    .service-upah { border-left-color: #9d5ab8; }
+    .service-koperasi { border-left-color: #c2682b; }
+    .service-lain { border-left-color: #6e6145; }
 
     .empty {
       margin-top: 14px;
@@ -213,12 +246,21 @@
 
     tr.active-row {
       background: #fff4d2;
-      font-weight: 700;
+      font-weight: 900;
+    }
+
+    .service-pill {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #fff4d2;
+      color: #5f4203;
+      font-weight: 800;
     }
 
     @media (max-width: 760px) {
       body {
-        padding: 16px;
+        padding: 14px;
       }
 
       header,
@@ -227,12 +269,12 @@
         grid-template-columns: 1fr;
       }
 
-      header {
-        display: grid;
-      }
-
       .counter-badge {
         width: 100%;
+      }
+
+      .brand h1 {
+        font-size: 24px;
       }
 
       table {
@@ -244,21 +286,26 @@
 </head>
 <body>
   <div class="wrap">
+    <section class="brand">
+      <h1>SAHABAT AR RAHNU KUANTAN</h1>
+      <h2>PANEL QUEUE SYSTEM</h2>
+    </section>
+
     <header>
-      <div>
-        <h1>Staff Panel</h1>
+      <section class="panel">
+        <h3>Operasi Kaunter</h3>
         <p>Pilih queue secara manual atau panggil pelanggan paling awal.</p>
-      </div>
-      <div id="counterBadge" class="counter-badge">Kaunter -</div>
+      </section>
+      <div id="counterBadge" class="counter-badge">KAUNTER -</div>
     </header>
 
     <main class="grid">
       <section class="panel">
-        <h2>Sedang Dipanggil</h2>
+        <h3>Sedang Dipanggil</h3>
         <div class="current">
           <span id="currentNumber" class="number">-</span>
           <span id="currentService" class="service">Belum ada panggilan</span>
-          <span id="currentStatus" class="status">Waiting</span>
+          <span id="currentStatus" class="status">Menunggu</span>
         </div>
         <div class="actions">
           <button id="callNext">CALL NEXT</button>
@@ -267,14 +314,14 @@
       </section>
 
       <section class="panel">
-        <h2>Queue Menunggu</h2>
+        <h3>Queue Menunggu</h3>
         <div id="waitingList" class="queue-list"></div>
       </section>
     </main>
 
     <section class="panel" style="margin-top: 16px;">
       <div class="actions">
-        <h2>Semua Queue</h2>
+        <h3>Semua Queue</h3>
         <button id="resetQueue" class="danger">RESET</button>
       </div>
       <table>
@@ -318,16 +365,24 @@
         localStorage.setItem("selectedCounter", selectedCounter);
       }
 
-      counterBadge.textContent = `Kaunter ${selectedCounter || "-"}`;
+      counterBadge.textContent = `KAUNTER ${selectedCounter || "-"}`;
+    }
+
+    function isWaiting(status) {
+      return status === "waiting" || status === "Menunggu" || status === "Waiting";
     }
 
     function statusLabel(status) {
       if (status === "serving" || status === "Serving") return "Dipanggil";
-      if (status === "done" || status === "Selesai") return "Selesai";
-      return "Waiting";
+      if (status === "done" || status === "selesai" || status === "Selesai") return "Selesai";
+      return "Menunggu";
     }
 
-    function setCurrent(queue, message) {
+    function serviceClass(serviceKey) {
+      return `service-${serviceKey || "lain"}`;
+    }
+
+    function setCurrent(queue) {
       activeQueueId = queue.id;
       currentNumber.textContent = queue.number;
       currentService.textContent = `${queue.service} - Kaunter ${queue.counter}`;
@@ -337,11 +392,11 @@
     async function loadQueue() {
       const response = await fetch("/api/queue");
       const rows = await response.json();
-      const waiting = rows.filter((item) => item.status === "waiting" || item.status === "Menunggu" || item.status === "Waiting");
+      const waiting = rows.filter((item) => isWaiting(item.status));
 
       waitingList.innerHTML = waiting.length
         ? waiting.map((item) => `
-          <button class="queue-item" data-id="${item.id}">
+          <button class="queue-item ${serviceClass(item.serviceKey)}" data-id="${item.id}">
             <strong>${item.number}</strong>
             <span>${item.service}</span>
           </button>
@@ -354,7 +409,7 @@
         .map((item) => `
           <tr class="${item.id === activeQueueId ? "active-row" : ""}">
             <td>${item.number}</td>
-            <td>${item.service}</td>
+            <td><span class="service-pill">${item.service}</span></td>
             <td>${statusLabel(item.status)}</td>
             <td>${item.counter ? "Kaunter " + item.counter : "-"}</td>
           </tr>
@@ -384,7 +439,7 @@
 
       try {
         const data = await postJson(`/api/call/${id}`, { counter: selectedCounter });
-        setCurrent(data.queue, data.message);
+        setCurrent(data.queue);
         await loadQueue();
       } catch (error) {
         alert(error.message);
@@ -399,7 +454,7 @@
         if (!selectedCounter) return;
 
         const data = await postJson("/api/next", { counter: selectedCounter });
-        setCurrent(data.queue, data.message);
+        setCurrent(data.queue);
         await loadQueue();
       } catch (error) {
         alert(error.message);
@@ -411,14 +466,14 @@
     changeCounterButton.addEventListener("click", askCounter);
 
     resetButton.addEventListener("click", async () => {
-      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001, K001?")) return;
+      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001, K001, L001?")) return;
 
       try {
         await postJson("/api/reset");
         activeQueueId = null;
         currentNumber.textContent = "-";
         currentService.textContent = "Belum ada panggilan";
-        currentStatus.textContent = "Waiting";
+        currentStatus.textContent = "Menunggu";
         await loadQueue();
       } catch (error) {
         alert(error.message);
