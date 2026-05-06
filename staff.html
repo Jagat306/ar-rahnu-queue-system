@@ -258,6 +258,38 @@
       font-weight: 800;
     }
 
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .summary-card {
+      min-height: 88px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #fff9eb;
+      border: 1px solid #f1dca3;
+      border-left: 8px solid #b98b22;
+    }
+
+    .summary-card span {
+      display: block;
+      color: #6e6145;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .summary-card strong {
+      display: block;
+      color: #2f2615;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
     @media (max-width: 760px) {
       body {
         padding: 14px;
@@ -265,7 +297,8 @@
 
       header,
       .grid,
-      .actions {
+      .actions,
+      .summary-grid {
         grid-template-columns: 1fr;
       }
 
@@ -320,6 +353,11 @@
     </main>
 
     <section class="panel" style="margin-top: 16px;">
+      <h3>TRANSAKSI HARI INI</h3>
+      <div id="summaryGrid" class="summary-grid"></div>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
       <div class="actions">
         <h3>Semua Queue</h3>
         <button id="resetQueue" class="danger">RESET</button>
@@ -345,12 +383,21 @@
     const currentStatus = document.getElementById("currentStatus");
     const waitingList = document.getElementById("waitingList");
     const queueBody = document.getElementById("queueBody");
+    const summaryGrid = document.getElementById("summaryGrid");
     const callNextButton = document.getElementById("callNext");
     const changeCounterButton = document.getElementById("changeCounter");
     const resetButton = document.getElementById("resetQueue");
 
     let selectedCounter = localStorage.getItem("selectedCounter");
     let activeQueueId = null;
+    const services = [
+      { key: "gadai", label: "Gadai" },
+      { key: "tebus", label: "Tebus" },
+      { key: "overlap", label: "Overlap" },
+      { key: "upah", label: "Bayaran Upah" },
+      { key: "koperasi", label: "Koperasi" },
+      { key: "lain", label: "Lain-lain" },
+    ];
 
     function askCounter() {
       let value = "";
@@ -389,10 +436,46 @@
       currentStatus.textContent = "Dipanggil";
     }
 
+    function isToday(dateText) {
+      const date = new Date(dateText);
+      const now = new Date();
+      return date.getFullYear() === now.getFullYear()
+        && date.getMonth() === now.getMonth()
+        && date.getDate() === now.getDate();
+    }
+
+    function renderSummary(rows) {
+      const todaysRows = rows.filter((item) => isToday(item.createdAt));
+      const counts = Object.fromEntries(services.map((service) => [service.key, 0]));
+
+      todaysRows.forEach((item) => {
+        if (counts[item.serviceKey] !== undefined) {
+          counts[item.serviceKey] += 1;
+        }
+      });
+
+      const total = todaysRows.length;
+      summaryGrid.innerHTML = [
+        ...services.map((service) => `
+          <div class="summary-card ${serviceClass(service.key)}">
+            <span>${service.label}</span>
+            <strong>${counts[service.key]}</strong>
+          </div>
+        `),
+        `
+          <div class="summary-card">
+            <span>Jumlah</span>
+            <strong>${total}</strong>
+          </div>
+        `,
+      ].join("");
+    }
+
     async function loadQueue() {
       const response = await fetch("/api/queue");
       const rows = await response.json();
       const waiting = rows.filter((item) => isWaiting(item.status));
+      renderSummary(rows);
 
       waitingList.innerHTML = waiting.length
         ? waiting.map((item) => `

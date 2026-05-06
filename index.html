@@ -163,6 +163,21 @@
       background: rgba(47, 38, 21, 0.88);
     }
 
+    .flash {
+      position: fixed;
+      inset: 0;
+      z-index: 19;
+      pointer-events: none;
+      display: none;
+      background:
+        radial-gradient(circle at center, rgba(255, 213, 98, 0.55), rgba(255, 153, 51, 0.22) 42%, rgba(255, 153, 51, 0) 72%);
+    }
+
+    .flash.show {
+      display: block;
+      animation: screenFlash 1.15s ease-in-out infinite;
+    }
+
     .popup.show {
       display: grid;
     }
@@ -234,6 +249,17 @@
         transform: scale(1);
       }
     }
+
+    @keyframes screenFlash {
+      0%, 100% {
+        opacity: 0.25;
+        box-shadow: inset 0 0 0 0 rgba(237, 206, 114, 0);
+      }
+      50% {
+        opacity: 1;
+        box-shadow: inset 0 0 90px 28px rgba(237, 173, 52, 0.75);
+      }
+    }
   </style>
 </head>
 <body>
@@ -272,6 +298,8 @@
     </section>
   </main>
 
+  <div id="flash" class="flash"></div>
+
   <div id="popup" class="popup">
     <section class="popup-card">
       <div class="popup-brand">SAHABAT AR RAHNU KUANTAN</div>
@@ -290,6 +318,7 @@
     const serviceText = document.getElementById("service");
     const statusText = document.getElementById("status");
     const counterText = document.getElementById("counter");
+    const flash = document.getElementById("flash");
     const popup = document.getElementById("popup");
     const popupNumber = document.getElementById("popupNumber");
     const popupText = document.getElementById("popupText");
@@ -297,6 +326,7 @@
 
     let savedTicket = loadSavedTicket();
     let popupShown = localStorage.getItem("arRahnuPopupShown") === "true";
+    let audioContext = null;
 
     function loadSavedTicket() {
       try {
@@ -345,6 +375,21 @@
       ticket.style.display = "block";
     }
 
+    function unlockAudio() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!audioContext) {
+          audioContext = new AudioContext();
+        }
+
+        if (audioContext.state === "suspended") {
+          audioContext.resume();
+        }
+      } catch (error) {
+        audioContext = null;
+      }
+    }
+
     function playTone(context, delay) {
       const oscillator = context.createOscillator();
       const gain = context.createGain();
@@ -361,11 +406,12 @@
 
     function playAlertSound() {
       try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const context = new AudioContext();
-        playTone(context, 0);
-        playTone(context, 0.55);
-        playTone(context, 1.1);
+        unlockAudio();
+        if (!audioContext) return;
+
+        playTone(audioContext, 0);
+        playTone(audioContext, 0.55);
+        playTone(audioContext, 1.1);
       } catch (error) {
         // Popup still appears if the browser blocks automatic audio.
       }
@@ -378,6 +424,7 @@
       localStorage.setItem("arRahnuPopupShown", "true");
       popupNumber.textContent = queue.number;
       popupText.textContent = `Sila ke Kaunter ${queue.counter} sekarang`;
+      flash.classList.add("show");
       popup.classList.add("show");
       playAlertSound();
 
@@ -410,6 +457,7 @@
 
     buttons.forEach((button) => {
       button.addEventListener("click", async () => {
+        unlockAudio();
         button.disabled = true;
 
         try {
@@ -436,6 +484,7 @@
 
     closePopup.addEventListener("click", () => {
       popup.classList.remove("show");
+      flash.classList.remove("show");
     });
 
     if (savedTicket) {
