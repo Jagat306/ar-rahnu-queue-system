@@ -52,7 +52,10 @@ function formatNumber(code, count) {
 }
 
 function sendJson(res, statusCode, data) {
-  res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
+  res.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
   res.end(JSON.stringify(data));
 }
 
@@ -89,6 +92,10 @@ function logDuplicateAttempt(req, idempotencyKey, existingQueue) {
   console.warn(
     `[duplicate-submission] key=${idempotencyKey} queue=${existingQueue.number} service=${existingQueue.serviceKey} ip=${remoteAddress} time=${new Date().toISOString()}`
   );
+}
+
+function logQueueSyncWarning(message, details = {}) {
+  console.warn(`[queue-sync] ${message} ${JSON.stringify({ ...details, time: new Date().toISOString() })}`);
 }
 
 function normalizeCounter(counter) {
@@ -135,11 +142,44 @@ async function createQueue(req, res) {
 
   db.queues.push(item);
   writeDb(db);
-  sendJson(res, 200, item);
+
+  const savedDb = readDb();
+  const savedItem = savedDb.queues.find((queue) => queue.id === item.id);
+
+  if (!savedItem) {
+    logQueueSyncWarning("queue save verification failed", {
+      number: item.number,
+      serviceKey: item.serviceKey,
+      idempotencyKey,
+    });
+    return sendJson(res, 500, { error: "Queue could not be saved. Please try again." });
+  }
+
+  console.log(`[queue-created] number=${savedItem.number} service=${savedItem.serviceKey} status=${savedItem.status}`);
+  sendJson(res, 200, savedItem);
 }
 
 function listQueue(res) {
   const queues = readDb().queues.slice().sort(sortByCreatedAt);
+
+  queues.forEach((queue) => {
+    if (!services[queue.serviceKey]) {
+      logQueueSyncWarning("unknown service key in queue record", {
+        id: queue.id,
+        number: queue.number,
+        serviceKey: queue.serviceKey,
+      });
+    }
+
+    if (!queue.status) {
+      logQueueSyncWarning("missing queue status", {
+        id: queue.id,
+        number: queue.number,
+        serviceKey: queue.serviceKey,
+      });
+    }
+  });
+
   sendJson(res, 200, queues);
 }
 

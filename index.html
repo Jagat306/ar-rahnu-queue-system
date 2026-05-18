@@ -381,6 +381,19 @@
       localStorage.setItem(ticketKey, JSON.stringify(savedTicket));
     }
 
+    function clearSavedTicket(reason) {
+      console.warn(`[customer-sync] ${reason}`);
+      savedTicket = null;
+      popupShown = false;
+      localStorage.removeItem(ticketKey);
+      localStorage.removeItem(pendingSubmissionKey);
+      localStorage.setItem("arRahnuPopupShown", "false");
+      ticket.style.display = "none";
+      popup.classList.remove("show");
+      flash.classList.remove("show");
+      setButtonsDisabled(false);
+    }
+
     function createIdempotencyKey() {
       if (window.crypto && typeof window.crypto.randomUUID === "function") {
         return window.crypto.randomUUID();
@@ -519,10 +532,14 @@
 
       try {
         const response = await fetch("/api/queue");
+        if (!response.ok) throw new Error("Queue sync failed");
         const queues = await response.json();
         const latest = queues.find((item) => item.id === savedTicket.id || item.number === savedTicket.number);
 
-        if (!latest) return;
+        if (!latest) {
+          clearSavedTicket(`saved ticket not found on server: ${savedTicket.number}`);
+          return;
+        }
 
         const wasServing = isServing(savedTicket.status);
         saveTicket(latest);
@@ -558,6 +575,7 @@
           if (response.status === 409 && data.queue) {
             popupShown = false;
             localStorage.setItem("arRahnuPopupShown", "false");
+            localStorage.removeItem(pendingSubmissionKey);
             saveTicket(data.queue);
             renderTicket(data.queue);
             stopLoading({ allowRetry: false });

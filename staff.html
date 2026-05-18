@@ -431,6 +431,10 @@
       return `service-${serviceKey || "lain"}`;
     }
 
+    function logStaffSyncWarning(message, details = {}) {
+      console.warn("[staff-sync]", message, details);
+    }
+
     function setCurrent(queue) {
       activeQueueId = queue.id;
       currentNumber.textContent = queue.number;
@@ -474,8 +478,36 @@
     }
 
     async function loadQueue() {
-      const response = await fetch("/api/queue");
-      const rows = await response.json();
+      let rows = [];
+
+      try {
+        const response = await fetch("/api/queue", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Queue API failed: ${response.status}`);
+        rows = await response.json();
+      } catch (error) {
+        logStaffSyncWarning("failed to load queue list", { error: error.message });
+        return;
+      }
+
+      if (!Array.isArray(rows)) {
+        logStaffSyncWarning("queue API did not return an array", { rows });
+        return;
+      }
+
+      rows.forEach((item) => {
+        const isKnownService = services.some((service) => service.key === item.serviceKey);
+        const isKnownStatus = ["waiting", "serving", "done", "Menunggu", "Waiting", "Serving", "Selesai", "selesai"].includes(item.status);
+
+        if (!isKnownService || !isKnownStatus || !item.number) {
+          logStaffSyncWarning("queue record may be hidden or invalid", {
+            id: item.id,
+            number: item.number,
+            serviceKey: item.serviceKey,
+            status: item.status,
+          });
+        }
+      });
+
       const waiting = rows.filter((item) => isWaiting(item.status));
       renderSummary(rows);
 
@@ -567,7 +599,7 @@
 
     askCounter();
     loadQueue();
-    setInterval(loadQueue, 3000);
+    setInterval(loadQueue, 2000);
   </script>
 </body>
 </html>
