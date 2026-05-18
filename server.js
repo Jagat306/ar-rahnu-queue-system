@@ -4,15 +4,16 @@ const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "queue.json");
-const DEFAULT_DB = { queues: [], counters: { G: 0, T: 0, O: 0, U: 0, K: 0, L: 0 } };
+const DEFAULT_DB = { queues: [], counters: { G: 0, T: 0, O: 0, U: 0, UI: 0, K: 0, L: 0 } };
 
 const services = {
   gadai: { code: "G", label: "Gadai" },
   tebus: { code: "T", label: "Tebus" },
   overlap: { code: "O", label: "Overlap" },
-  upah: { code: "U", label: "Bayaran Upah" },
+  upah: { code: "U", label: "Bayaran Upah 6 Bulan Pertama" },
+  upah_lanjutan: { code: "UI", label: "Bayaran Upah 6 Bulan Lanjutan" },
   koperasi: { code: "K", label: "Koperasi" },
-  lain: { code: "L", label: "Lain-lain" },
+  lain: { code: "L", label: "Lain-Lain" },
 };
 
 const mimeTypes = {
@@ -83,24 +84,47 @@ function isWaiting(status) {
   return status === "waiting" || status === "Menunggu" || status === "Waiting";
 }
 
+function logDuplicateAttempt(req, idempotencyKey, existingQueue) {
+  const remoteAddress = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress : "unknown";
+  console.warn(
+    `[duplicate-submission] key=${idempotencyKey} queue=${existingQueue.number} service=${existingQueue.serviceKey} ip=${remoteAddress} time=${new Date().toISOString()}`
+  );
+}
+
 function normalizeCounter(counter) {
   const selectedCounter = Number(counter);
   return [1, 2, 3].includes(selectedCounter) ? selectedCounter : null;
 }
 
 async function createQueue(req, res) {
-  const { service } = await parseBody(req);
+  const { service, idempotencyKey } = await parseBody(req);
   const config = services[service];
 
   if (!config) {
     return sendJson(res, 400, { error: "Invalid service" });
   }
 
+  if (!idempotencyKey || typeof idempotencyKey !== "string") {
+    return sendJson(res, 400, { error: "Missing idempotency key" });
+  }
+
   const db = readDb();
+  const existingQueue = db.queues.find((item) => item.idempotencyKey === idempotencyKey);
+
+  if (existingQueue) {
+    logDuplicateAttempt(req, idempotencyKey, existingQueue);
+    return sendJson(res, 409, {
+      error: "Duplicate queue submission rejected",
+      queue: existingQueue,
+    });
+  }
+
   db.counters[config.code] += 1;
 
   const item = {
     id: Date.now().toString(),
+    idempotencyKey,
+    code: config.code,
     service: config.label,
     serviceKey: service,
     number: formatNumber(config.code, db.counters[config.code]),

@@ -213,6 +213,7 @@
     .service-tebus { border-left-color: #1f8f4d; }
     .service-overlap { border-left-color: #4564b8; }
     .service-upah { border-left-color: #9d5ab8; }
+    .service-upah_lanjutan { border-left-color: #7d4ab8; }
     .service-koperasi { border-left-color: #c2682b; }
     .service-lain { border-left-color: #6e6145; }
 
@@ -394,9 +395,10 @@
       { key: "gadai", label: "Gadai" },
       { key: "tebus", label: "Tebus" },
       { key: "overlap", label: "Overlap" },
-      { key: "upah", label: "Bayaran Upah" },
+      { key: "upah", label: "Bayaran Upah 6 Bulan Pertama" },
+      { key: "upah_lanjutan", label: "Bayaran Upah 6 Bulan Lanjutan" },
       { key: "koperasi", label: "Koperasi" },
-      { key: "lain", label: "Lain-lain" },
+      { key: "lain", label: "Lain-Lain" },
     ];
 
     function askCounter() {
@@ -549,7 +551,7 @@
     changeCounterButton.addEventListener("click", askCounter);
 
     resetButton.addEventListener("click", async () => {
-      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001, K001, L001?")) return;
+      if (!confirm("Reset semua queue dan mula semula dari G001, T001, O001, U001, UI001, K001, L001?")) return;
 
       try {
         await postJson("/api/reset");

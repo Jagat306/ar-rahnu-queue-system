@@ -86,12 +86,36 @@
       color: #ffffff;
       font-size: 18px;
       font-weight: 900;
+      line-height: 1.2;
+      padding: 10px 14px;
       cursor: pointer;
       box-shadow: 0 8px 16px rgba(185, 139, 34, 0.18);
     }
 
     button:hover {
       background: #a27618;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.72;
+    }
+
+    button.loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button.loading::after {
+      content: "";
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.45);
+      border-top-color: #ffffff;
+      border-radius: 999px;
+      animation: spin 0.75s linear infinite;
     }
 
     .ticket {
@@ -260,6 +284,12 @@
         box-shadow: inset 0 0 90px 28px rgba(237, 173, 52, 0.75);
       }
     }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 <body>
@@ -277,12 +307,13 @@
       <p>Pilih urusan untuk mendapatkan nombor giliran.</p>
 
       <section class="buttons">
-        <button data-service="gadai">Gadai</button>
-        <button data-service="tebus">Tebus</button>
-        <button data-service="overlap">Overlap</button>
-        <button data-service="upah">Bayaran Upah</button>
-        <button data-service="koperasi">Koperasi</button>
-        <button data-service="lain">Lain-lain</button>
+        <button data-service="gadai">Gadai (G)</button>
+        <button data-service="tebus">Tebus (T)</button>
+        <button data-service="overlap">Overlap (O)</button>
+        <button data-service="upah">Bayaran Upah 6 Bulan Pertama (U)</button>
+        <button data-service="upah_lanjutan">Bayaran Upah 6 Bulan Lanjutan (UI)</button>
+        <button data-service="koperasi">Koperasi (K)</button>
+        <button data-service="lain">Lain-Lain (L)</button>
       </section>
 
       <section id="ticket" class="ticket">
@@ -312,6 +343,7 @@
 
   <script>
     const ticketKey = "arRahnuTicket";
+    const pendingSubmissionKey = "arRahnuPendingSubmissionKey";
     const buttons = document.querySelectorAll("button[data-service]");
     const ticket = document.getElementById("ticket");
     const number = document.getElementById("number");
@@ -327,6 +359,8 @@
     let savedTicket = loadSavedTicket();
     let popupShown = localStorage.getItem("arRahnuPopupShown") === "true";
     let audioContext = null;
+    let submissionInProgress = false;
+    let loadingButton = null;
 
     function loadSavedTicket() {
       try {
@@ -345,6 +379,53 @@
         counter: queue.counter,
       };
       localStorage.setItem(ticketKey, JSON.stringify(savedTicket));
+    }
+
+    function createIdempotencyKey() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+      }
+
+      return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function getSubmissionKey() {
+      let key = localStorage.getItem(pendingSubmissionKey);
+
+      if (!key) {
+        key = createIdempotencyKey();
+        localStorage.setItem(pendingSubmissionKey, key);
+      }
+
+      return key;
+    }
+
+    function setButtonsDisabled(disabled) {
+      buttons.forEach((button) => {
+        button.disabled = disabled;
+      });
+    }
+
+    function startLoading(button) {
+      submissionInProgress = true;
+      loadingButton = button;
+      setButtonsDisabled(true);
+      button.classList.add("loading");
+      button.setAttribute("aria-busy", "true");
+    }
+
+    function stopLoading({ allowRetry }) {
+      if (loadingButton) {
+        loadingButton.classList.remove("loading");
+        loadingButton.removeAttribute("aria-busy");
+      }
+
+      loadingButton = null;
+      submissionInProgress = false;
+
+      if (allowRetry) {
+        setButtonsDisabled(false);
+      }
     }
 
     function isServing(status) {
@@ -457,27 +538,43 @@
 
     buttons.forEach((button) => {
       button.addEventListener("click", async () => {
+        if (submissionInProgress || savedTicket) return;
+
         unlockAudio();
-        button.disabled = true;
+        startLoading(button);
 
         try {
           const response = await fetch("/api/queue", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ service: button.dataset.service }),
+            body: JSON.stringify({
+              service: button.dataset.service,
+              idempotencyKey: getSubmissionKey(),
+            }),
           });
 
           const data = await response.json();
+
+          if (response.status === 409 && data.queue) {
+            popupShown = false;
+            localStorage.setItem("arRahnuPopupShown", "false");
+            saveTicket(data.queue);
+            renderTicket(data.queue);
+            stopLoading({ allowRetry: false });
+            return;
+          }
+
           if (!response.ok) throw new Error(data.error || "Server error");
 
           popupShown = false;
           localStorage.setItem("arRahnuPopupShown", "false");
+          localStorage.removeItem(pendingSubmissionKey);
           saveTicket(data);
           renderTicket(data);
+          stopLoading({ allowRetry: false });
         } catch (error) {
           alert(error.message);
-        } finally {
-          button.disabled = false;
+          stopLoading({ allowRetry: true });
         }
       });
     });
@@ -488,6 +585,7 @@
     });
 
     if (savedTicket) {
+      setButtonsDisabled(true);
       renderTicket(savedTicket);
       monitorTicket();
     }
